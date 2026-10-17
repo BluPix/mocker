@@ -1,4 +1,5 @@
 import ArgumentParser
+import Foundation
 import MockerKit
 
 struct Build: AsyncParsableCommand {
@@ -9,8 +10,8 @@ struct Build: AsyncParsableCommand {
     @Argument(help: "Build context path")
     var context: String = "."
 
-    @Option(name: .shortAndLong, help: "Name and optionally a tag (name:tag)")
-    var tag: String
+    @Option(name: .shortAndLong, help: "Name and optionally a tag (name:tag); optional, repeatable")
+    var tag: [String] = []
 
     @Option(name: .shortAndLong, help: "Name of the Dockerfile")
     var file: String?
@@ -124,23 +125,30 @@ struct Build: AsyncParsableCommand {
         try config.ensureDirectories()
         let manager = try ImageManager(config: config)
 
+        // Docker allows building without -t; `container build` then names the image after a
+        // random UUID. Pick that name here so the built image can be looked up afterwards.
+        let tags = tag.isEmpty ? ["\(UUID().uuidString.lowercased()):latest"] : tag
+
         if !quiet {
-            print("Building \(tag)...")
+            print("Building \(tags.joined(separator: ", "))...")
         }
         let image = try await manager.build(
-            tag: tag, context: context, dockerfile: file, noCache: noCache,
+            tags: tags, context: context, dockerfile: file, noCache: noCache,
             buildArgs: buildArg, platforms: platform, target: target,
             labels: label, quiet: quiet, progress: progress, output: output,
             builder: builder
         )
         // The build can succeed while the image is not readable from our store; report
         // the tag rather than an empty ID in that case.
-        let identifier = image.id.isEmpty ? tag : image.shortID
+        let identifier = image.id.isEmpty ? tags[0] : image.shortID
         if quiet {
             print(identifier)
         } else {
             print("Successfully built \(identifier)")
-            print("Successfully tagged \(tag)")
+            // Only the user's tags, as Docker does: the generated name is not one of them.
+            for t in tag {
+                print("Successfully tagged \(t)")
+            }
         }
     }
 }

@@ -718,7 +718,7 @@ struct ComposeBuildCommand: AsyncParsableCommand {
                 cwd: projectDir.path
             )
             _ = try await manager.build(
-                tag: tag, context: absContext,
+                tags: [tag], context: absContext,
                 dockerfile: dockerfilePath,
                 noCache: noCache, buildArgs: buildConfig.argList + buildArg,
                 target: buildConfig.target
