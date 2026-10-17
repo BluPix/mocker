@@ -255,12 +255,14 @@ public actor ImageManager {
     /// manual escape hatch for exotic architectures (ppc64le/s390x/riscv64) that
     /// the local arm64 BuildKit VM cannot emulate — see README and apple/container#1496.
     static func makeBuildArguments(
-        tag: String, dockerfilePath: String, context: String, noCache: Bool = false,
+        tags: [String], dockerfilePath: String, context: String, noCache: Bool = false,
         buildArgs: [String] = [], platforms: [String] = [], target: String? = nil,
         labels: [String] = [], quiet: Bool = false, progress: String? = nil,
         output: [String] = [], builder: String? = nil
     ) -> [String] {
-        var args = ["build", "-t", tag, "-f", dockerfilePath]
+        var args = ["build"]
+        for t in tags { args += ["-t", t] }
+        args += ["-f", dockerfilePath]
         if noCache { args.append("--no-cache") }
         for arg in buildArgs { args += ["--build-arg", arg] }
         for p in platforms { args += ["--platform", p] }
@@ -301,7 +303,11 @@ public actor ImageManager {
     /// - Parameter platforms: pass multiple values to build a multi-arch manifest list (e.g. `["linux/amd64", "linux/arm64"]`).
     /// - Parameter builder: optional named builder instance forwarded to `container build --builder`,
     ///   enabling a remote BuildKit node for exotic architectures (apple/container#1496).
-    public func build(tag: String, context: String, dockerfile: String? = nil, noCache: Bool = false, buildArgs: [String] = [], platforms: [String] = [], target: String? = nil, labels: [String] = [], quiet: Bool = false, progress: String? = nil, output: [String] = [], builder: String? = nil) async throws -> ImageInfo {
+    public func build(tags: [String], context: String, dockerfile: String? = nil, noCache: Bool = false, buildArgs: [String] = [], platforms: [String] = [], target: String? = nil, labels: [String] = [], quiet: Bool = false, progress: String? = nil, output: [String] = [], builder: String? = nil) async throws -> ImageInfo {
+        // The first tag is the one the built image is looked up under.
+        guard let tag = tags.first else {
+            throw MockerError.buildError("No image name given for the build")
+        }
         let absContext = Self.resolveContextPath(context: context, cwd: FileManager.default.currentDirectoryPath)
         let dockerfilePath = Self.resolveDockerfilePath(
             context: absContext,
@@ -314,7 +320,7 @@ public actor ImageManager {
         }
 
         let args = Self.makeBuildArguments(
-            tag: tag, dockerfilePath: dockerfilePath, context: context, noCache: noCache,
+            tags: tags, dockerfilePath: dockerfilePath, context: context, noCache: noCache,
             buildArgs: buildArgs, platforms: platforms, target: target, labels: labels,
             quiet: quiet, progress: progress, output: output, builder: builder
         )

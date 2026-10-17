@@ -561,7 +561,7 @@ public actor ComposeOrchestrator {
                     cwd: projectDir.path
                 )
                 _ = try await imageManager.build(
-                    tag: tag,
+                    tags: [tag],
                     context: absContext,
                     dockerfile: dockerfilePath,
                     buildArgs: build.argList,

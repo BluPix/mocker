@@ -187,7 +187,13 @@ struct CLITests {
             ".",
         ])
         #expect(command.platform == ["linux/amd64", "linux/arm64"])
-        #expect(command.tag == "multi:latest")
+        #expect(command.tag == ["multi:latest"])
+    }
+
+    @Test("Build --tag is optional and repeatable, matching Docker")
+    func buildTagOptionalAndRepeatable() throws {
+        #expect(try Build.parse(["."]).tag.isEmpty)
+        #expect(try Build.parse(["-t", "app:1.0", "--tag", "app:latest", "."]).tag == ["app:1.0", "app:latest"])
     }
 
     @Test("Build command leaves platform empty when omitted")

@@ -453,7 +453,7 @@ mocker build [OPTIONS] PATH
 
 | Flag | Short | Description |
 |------|-------|-------------|
-| `--tag` | `-t` | Name and optionally a tag (name:tag) |
+| `--tag` | `-t` | Name and optionally a tag (name:tag); optional, repeatable |
 | `--file` | `-f` | Name of the Dockerfile (default: Dockerfile) |
 | `--no-cache` | | Do not use cache when building |
 | `--build-arg` | | Set build-time variables |

@@ -320,7 +320,7 @@ mocker build [OPTIONS] PATH
 
 **Flags:**
 ```
--t, --tag    Name and tag (name:tag)
+-t, --tag    Name and tag (name:tag); repeatable, optional
 -f, --file   Dockerfile path (default: Dockerfile in build context)
 ```
 
@@ -328,6 +328,7 @@ mocker build [OPTIONS] PATH
 ```bash
 mocker build -t myapp:latest .
 mocker build -t myapp:latest -f ./docker/Dockerfile.prod .
+mocker build -t myapp:1.0 -t myapp:latest .
 mocker build -t my-registry.io/myapp:$(git rev-parse --short HEAD) .
 ```
 
